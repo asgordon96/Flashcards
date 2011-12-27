@@ -22,7 +22,7 @@ from card_set import FlashcardSet
 class MainWindow(wx.Frame):
     """The main control window of the Flashcard Application"""
     def __init__(self, master):
-        super(MainWindow, self).__init__(master, -1)
+        super(MainWindow, self).__init__(master, -1, size=(500, 265))
         self.flashcards = FlashcardSet()
 ##        Here for testing purposes only
 ##        self.flashcards.add("vencer", "to defeat")
@@ -59,17 +59,19 @@ class MainWindow(wx.Frame):
         
         self.next_b = wx.Button(self, label="Next")
         self.prev_b = wx.Button(self, label="Prev") 
-        next_back_frame.Add(self.next_b, flag=wx.ALIGN_CENTER, border=5)
-        next_back_frame.Add(self.prev_b, flag=wx.ALIGN_CENTER, border=5)
+        next_back_frame.Add(self.prev_b, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
+        next_back_frame.Add(self.next_b, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
         
         vbox.Add(self.card_front, flag=wx.ALIGN_CENTER|wx.ALL, border=10)
         vbox.Add(self.card_back, flag=wx.ALIGN_CENTER|wx.ALL, border=10)
+        vbox.Add(self.card_number, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
         vbox.Add(next_back_frame, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
         
+        b_size = (150, 22)
         buttons_box = wx.BoxSizer(wx.HORIZONTAL)
-        self.new_b = wx.Button(self, label="New Cards")
-        self.view_b = wx.Button(self, label="View Cards")
-        self.quiz_b = wx.Button(self, label="Quiz")
+        self.new_b = wx.Button(self, label="New Cards", size=b_size)
+        self.view_b = wx.Button(self, label="View Cards", size=b_size)
+        self.quiz_b = wx.Button(self, label="Quiz", size=b_size)
         buttons_box.Add(self.new_b, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
         buttons_box.Add(self.view_b, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
         buttons_box.Add(self.quiz_b, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
@@ -78,25 +80,27 @@ class MainWindow(wx.Frame):
         self.SetSizer(vbox)
         self.Show()
         
-#        # Building the menu
-#        menubar = Menu(self.root)
-#        filemenu = Menu(menubar, tearoff=0)
-#        filemenu.add_command(label="New", accelerator="Command+N")
-#        filemenu.add_command(label="Open", accelerator="Command+O", command=self.on_open)
-#        filemenu.add_command(label="Save", accelerator="Command+S", command=self.on_save)
-#        filemenu.add_command(label="Quit", accelerator="Command+Q", command=self.on_quit)
-#        menubar.add_cascade(label="File", menu=filemenu)
+        # Building the menu
+        menubar = wx.MenuBar()
+        filemenu = wx.Menu()
+        new = filemenu.Append(id=-1, text="New\tCtrl+N")
+        open = filemenu.Append(id=-1, text="Open\tCtrl+O")
+        save = filemenu.Append(id=-1, text="Save\tCtrl+S")
+        save_as = filemenu.Append(id=-1, text="Save As...\tShift+Ctrl+S")
+        quit = filemenu.Append(id=-1, text="Quit\tCtrl+Q")
+        
+        menubar.Append(filemenu, title="File")
 
-#        cardsmenu = Menu(menubar, tearoff=0)
-#        cardsmenu.add_command(label="Shuffle Cards", command=self.shuffle_cards)
-#        cardsmenu.add_command(label="View All", command=self.view_all_cards,
-#                              accelerator="Command+V")
-#        cardsmenu.add_command(label="Find", accelerator="Command+F", command=self.find_card_win)
-#        menubar.add_cascade(label="Cards", menu=cardsmenu)
+        cardsmenu = wx.Menu()
+        shuffle = cardsmenu.Append(id=-1, text="Shuffle Cards")
+        view_all = cardsmenu.Append(id=-1, text="View Cards\tCtrl+V")
+        find = cardsmenu.Append(id=-1, text="Find\tCtrl+F")
+        
+        
+        menubar.Append(cardsmenu, title="Cards")
+        self.SetMenuBar(menubar)
 
-#        self.root.config(menu=menubar)
-
-#        # Accelerator key binding
+        # Accelerator key binding
 #        self.root.bind("<Command-o>", self.on_open)
 #        self.root.bind("<Command-s>", self.on_save)
 #        self.root.bind("<Command-q>", self.on_quit)
