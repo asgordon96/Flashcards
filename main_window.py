@@ -12,18 +12,17 @@
 # NEW in version 0.3: The GUI will be converted to wxPython
 # Will be put under version control with git
 
-from Tkinter import *
-import tkFileDialog
-from multi_listbox import MultiListbox
+import wx
 import pickle
 from card_set import FlashcardSet
-from new_cards_window import NewCardsWin
-from quiz_window import QuizWindow
-from edit_window import EditWindow
+#from new_cards_window import NewCardsWin
+#from quiz_window import QuizWindow
+#from edit_window import EditWindow
 
-class MainWindow:
+class MainWindow(wx.Frame):
     """The main control window of the Flashcard Application"""
     def __init__(self, master):
+        super(MainWindow, self).__init__(master, -1)
         self.flashcards = FlashcardSet()
 ##        Here for testing purposes only
 ##        self.flashcards.add("vencer", "to defeat")
@@ -37,75 +36,72 @@ class MainWindow:
         self.saved = False
         self.saved_changes = True
         
-        self.root = master
-        self.root.title("Untitled")
+        self.SetTitle("Untitled")
         self.initUI()
 
     def initUI(self):
-        top_frame = Frame(self.root)
-        bot_frame = Frame(self.root)
-        the_font = ("Default", "36")
+        vbox = wx.BoxSizer(wx.VERTICAL)
+
+        the_font = wx.Font(36, family=wx.MODERN, style=wx.NORMAL, 
+                           weight=wx.NORMAL, faceName='times')
         
         # Building the top of the window. 
         # This includes the front and back of the flashcard
         # This also includes the 'next' and 'previous' buttons
-        self.card_front = Label(top_frame, text="No flashcards", font=the_font)
-        self.card_back  = Label(top_frame, text="to display", font=the_font)
-        self.card_number = Label(top_frame, text="")
-        next_back_frame = Frame(top_frame)
-        self.next_b     = Button(next_back_frame, text="Next", width=7,
-                                 command=self.show_next_card)
-        self.prev_b = Button(next_back_frame, text="Previous", width=7,
-                             command=self.show_prev_card)
+        self.card_front = wx.StaticText(self, label="No Flashcards")
+        self.card_back  = wx.StaticText(self, label="to display")
+        self.card_number = wx.StaticText(self, label="")
         
-        self.card_front.pack(pady=5)
-        self.card_back.pack(pady=5)
-        self.card_number.pack(pady=5)
+        self.card_front.SetFont(the_font)
+        self.card_back.SetFont(the_font)
         
-        self.prev_b.pack(side=LEFT)
-        self.next_b.pack(side=LEFT)
-        next_back_frame.pack(pady=5)
-
-        self.new_b = Button(bot_frame, text = "New Cards", width=15,
-                            command=self.new_cards_window)
+        next_back_frame = wx.BoxSizer(wx.HORIZONTAL)
         
-        self.delete_b = Button(bot_frame, text= "Edit Cards", width=15, 
-                               command=self.edit_cards)
+        self.next_b = wx.Button(self, label="Next")
+        self.prev_b = wx.Button(self, label="Prev") 
+        next_back_frame.Add(self.next_b, flag=wx.ALIGN_CENTER, border=5)
+        next_back_frame.Add(self.prev_b, flag=wx.ALIGN_CENTER, border=5)
         
-        self.quiz_b = Button(bot_frame, text = "Quiz", width=15, 
-                             command=self.quiz_begin)
+        vbox.Add(self.card_front, flag=wx.ALIGN_CENTER|wx.ALL, border=10)
+        vbox.Add(self.card_back, flag=wx.ALIGN_CENTER|wx.ALL, border=10)
+        vbox.Add(next_back_frame, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
+        
+        buttons_box = wx.BoxSizer(wx.HORIZONTAL)
+        self.new_b = wx.Button(self, label="New Cards")
+        self.view_b = wx.Button(self, label="View Cards")
+        self.quiz_b = wx.Button(self, label="Quiz")
+        buttons_box.Add(self.new_b, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
+        buttons_box.Add(self.view_b, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
+        buttons_box.Add(self.quiz_b, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
+        
+        vbox.Add(buttons_box, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
+        self.SetSizer(vbox)
+        self.Show()
+        
+#        # Building the menu
+#        menubar = Menu(self.root)
+#        filemenu = Menu(menubar, tearoff=0)
+#        filemenu.add_command(label="New", accelerator="Command+N")
+#        filemenu.add_command(label="Open", accelerator="Command+O", command=self.on_open)
+#        filemenu.add_command(label="Save", accelerator="Command+S", command=self.on_save)
+#        filemenu.add_command(label="Quit", accelerator="Command+Q", command=self.on_quit)
+#        menubar.add_cascade(label="File", menu=filemenu)
 
-        self.new_b.pack(side=RIGHT, pady=5, padx=5)
-        self.delete_b.pack(side=RIGHT, pady=5, padx=5)
-        self.quiz_b.pack(side=RIGHT, pady=5, padx=5)
+#        cardsmenu = Menu(menubar, tearoff=0)
+#        cardsmenu.add_command(label="Shuffle Cards", command=self.shuffle_cards)
+#        cardsmenu.add_command(label="View All", command=self.view_all_cards,
+#                              accelerator="Command+V")
+#        cardsmenu.add_command(label="Find", accelerator="Command+F", command=self.find_card_win)
+#        menubar.add_cascade(label="Cards", menu=cardsmenu)
 
-        top_frame.pack()
-        bot_frame.pack(pady=10)
+#        self.root.config(menu=menubar)
 
-        # Building the menu
-        menubar = Menu(self.root)
-        filemenu = Menu(menubar, tearoff=0)
-        filemenu.add_command(label="New", accelerator="Command+N")
-        filemenu.add_command(label="Open", accelerator="Command+O", command=self.on_open)
-        filemenu.add_command(label="Save", accelerator="Command+S", command=self.on_save)
-        filemenu.add_command(label="Quit", accelerator="Command+Q", command=self.on_quit)
-        menubar.add_cascade(label="File", menu=filemenu)
-
-        cardsmenu = Menu(menubar, tearoff=0)
-        cardsmenu.add_command(label="Shuffle Cards", command=self.shuffle_cards)
-        cardsmenu.add_command(label="View All", command=self.view_all_cards,
-                              accelerator="Command+V")
-        cardsmenu.add_command(label="Find", accelerator="Command+F", command=self.find_card_win)
-        menubar.add_cascade(label="Cards", menu=cardsmenu)
-
-        self.root.config(menu=menubar)
-
-        # Accelerator key binding
-        self.root.bind("<Command-o>", self.on_open)
-        self.root.bind("<Command-s>", self.on_save)
-        self.root.bind("<Command-q>", self.on_quit)
-        self.root.bind("<Command-f>", self.find_card_win)
-        self.root.bind("<Command-v>", self.view_all_cards)
+#        # Accelerator key binding
+#        self.root.bind("<Command-o>", self.on_open)
+#        self.root.bind("<Command-s>", self.on_save)
+#        self.root.bind("<Command-q>", self.on_quit)
+#        self.root.bind("<Command-f>", self.find_card_win)
+#        self.root.bind("<Command-v>", self.view_all_cards)
 
     def shuffle_cards(self, event=None):
         self.flashcards.shuffle()
@@ -309,6 +305,6 @@ class MainWindow:
         self.root.destroy()
         
         
-root = Tk()
-app = MainWindow(root)
-root.mainloop()
+app = wx.App()
+f = MainWindow(None)
+app.MainLoop()
