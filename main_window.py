@@ -25,11 +25,11 @@ class MainWindow(wx.Frame):
         super(MainWindow, self).__init__(master, -1, size=(500, 265))
         self.flashcards = FlashcardSet()
 ##        Here for testing purposes only
-##        self.flashcards.add("vencer", "to defeat")
-##        self.flashcards.add("conseguir", "to achieve")
-##        self.flashcards.add("fingir", "to pretend")
-##        self.flashcards.add("proteger", "to protect")
-##        self.flashcards.add("merecer", "to deserve")
+        self.flashcards.add("vencer", "to defeat")
+        self.flashcards.add("conseguir", "to achieve")
+        self.flashcards.add("fingir", "to pretend")
+        self.flashcards.add("proteger", "to protect")
+        self.flashcards.add("merecer", "to deserve")
         self.index = 0
         
         self.card_index = 1
@@ -96,9 +96,13 @@ class MainWindow(wx.Frame):
         view_all = cardsmenu.Append(id=-1, text="View Cards\tCtrl+V")
         find = cardsmenu.Append(id=-1, text="Find\tCtrl+F")
         
-        
         menubar.Append(cardsmenu, title="Cards")
         self.SetMenuBar(menubar)
+        
+        self.Bind(wx.EVT_BUTTON, handler=self.show_next_card, 
+                  id=self.next_b.GetId())
+        self.Bind(wx.EVT_BUTTON, handler=self.show_prev_card,
+                  id=self.prev_b.GetId())
 
         # Accelerator key binding
 #        self.root.bind("<Command-o>", self.on_open)
@@ -147,15 +151,15 @@ class MainWindow(wx.Frame):
             self.data_view.insert(END, (card[0], card[1], card.correct,
                                          card.incorrect, percent))
 
-    def show_next_card(self):
+    def show_next_card(self, event):
         """Method called to display the next flashcard in the set"""
         if len(self.flashcards) == 0:
             return
         
         front = self.flashcards[self.index] [0]
         back  = self.flashcards[self.index] [1]
-        self.card_front['text'] = front
-        self.card_back['text'] = back
+        self.card_front.SetLabel(front)
+        self.card_back.SetLabel(back)
         self.index += 1
         if self.index == len(self.flashcards):
             self.index = 0
@@ -164,12 +168,13 @@ class MainWindow(wx.Frame):
         else:
             self.card_index += 1
         self.update_card_count()
+        self.Layout()
 
-    def show_prev_card(self):
+    def show_prev_card(self, event):
         front = self.flashcards[self.index] [0]
         back  = self.flashcards[self.index] [1]
-        self.card_front['text'] = front
-        self.card_back['text'] = back
+        self.card_front.SetLabel(front)
+        self.card_back.SetLabel(back)
         self.index -= 1
         if self.index == 0:
             self.index = len(self.flashcards) - 1
@@ -178,6 +183,7 @@ class MainWindow(wx.Frame):
         else:
             self.card_index -= 1
         self.update_card_count()
+        self.Layout()
     
     def find_card_win(self, event=None):
         self.find_win = Toplevel(self.root)
@@ -215,7 +221,7 @@ class MainWindow(wx.Frame):
     
     def update_card_count(self):
         """Update the text of the counter for the card number. i.e. 5 / 26, or 10 / 21"""
-        self.card_number['text'] = "%d / %d" % (self.card_index, len(self.flashcards))
+        self.card_number.SetLabel("%d / %d" % (self.card_index, len(self.flashcards)))
 
     def new_cards_window(self):
         win = NewCardsWin(self.root, self.flashcards)
