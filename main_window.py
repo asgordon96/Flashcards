@@ -15,7 +15,7 @@
 import wx
 import pickle
 from card_set import FlashcardSet
-#from new_cards_window import NewCardsWin
+from new_cards_window import NewCardsWin
 #from quiz_window import QuizWindow
 #from edit_window import EditWindow
 
@@ -103,6 +103,8 @@ class MainWindow(wx.Frame):
                   id=self.next_b.GetId())
         self.Bind(wx.EVT_BUTTON, handler=self.show_prev_card,
                   id=self.prev_b.GetId())
+        self.Bind(wx.EVT_BUTTON, handler=self.new_cards_window,
+                  id=self.new_b.GetId())
 
         # Accelerator key binding
 #        self.root.bind("<Command-o>", self.on_open)
@@ -223,12 +225,12 @@ class MainWindow(wx.Frame):
         """Update the text of the counter for the card number. i.e. 5 / 26, or 10 / 21"""
         self.card_number.SetLabel("%d / %d" % (self.card_index, len(self.flashcards)))
 
-    def new_cards_window(self):
-        win = NewCardsWin(self.root, self.flashcards)
+    def new_cards_window(self, event):
+        win = NewCardsWin(self, self.flashcards)
         self.save_changes = False
-        old_title = self.root.title()
+        old_title = self.GetTitle()
         if old_title[0] != "*":
-            self.root.title("*%s" % (old_title))
+            self.SetTitle("*%s" % (old_title))
         
 
     def quiz_begin(self):

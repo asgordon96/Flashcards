@@ -9,60 +9,56 @@ import wx
 class NewCardsWin:
     """The dialog window for making new flashcards"""
     def __init__(self, master, cards):
-        self.win = Toplevel(master)
-        self.win.title("Add Flashcards")
+        self.win = wx.Dialog(master, title="Add Cards", size=(250, 150),
+                             style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         self.cards = cards
         self.initUI()
 
     def initUI(self):
-        top_frame = Frame(self.win)
-        bot_frame = Frame(self.win)
-        left = Frame(top_frame)
-        right = Frame(top_frame)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        fgs = wx.FlexGridSizer(rows=2, cols=2, vgap=10, hgap=10)
+        
+        size = (150, 22)
+        self.front_entry = wx.TextCtrl(self.win, size=size)
+        self.back_entry = wx.TextCtrl(self.win, size=size)
 
-        self.front_side = StringVar()
-        self.back_side = StringVar()
-        self.front_entry = AccentEntry(right, textvariable=self.front_side,
-                                 font="default")
-        self.back_entry = AccentEntry(right, textvariable=self.back_side,
-                                font="default")
-        self.front_entry.pack(pady=5, padx=10)
-        self.back_entry.pack(pady=5, padx=10)
-        right.pack(side=RIGHT)
-
-        front_label = Label(left, text="Front:", font="default")
-        back_label = Label(left, text="Back:", font="default")
-        front_label.pack(pady=5)
-        back_label.pack(pady=5)
-        left.pack(side=RIGHT)
-        top_frame.pack(pady=5)
-
-        add_b = Button(bot_frame, text="Add", width=6,
-                       command=self.add_new_card)
-        finish_b = Button(bot_frame, text="Finish", width=6,
-                          command=self.finish_call)
-        finish_b.pack(side=RIGHT, padx=5)
-        add_b.pack(side=RIGHT, padx=5)
-        bot_frame.pack(pady=5)
-        self.front_entry.bind("<Return>", self.add_new_card)
-        self.back_entry.bind("<Return>", self.add_new_card)
+        front_label = wx.StaticText(self.win, label="Front:")
+        back_label = wx.StaticText(self.win, label="Back:")
+        
+        fgs.Add(front_label)
+        fgs.Add(self.front_entry)
+        fgs.Add(back_label)
+        fgs.Add(self.back_entry)
+        vbox.Add(fgs, flag=wx.ALL, border=10)
+        
+        buttons_frame = wx.BoxSizer(wx.HORIZONTAL)
+        add_b = wx.Button(self.win, label="Add")
+        finish_b = wx.Button(self.win, label="Finish")
+        buttons_frame.Add(add_b, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        buttons_frame.Add(finish_b, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        vbox.Add(buttons_frame, flag=wx.ALIGN_CENTER)
+        self.win.SetSizer(vbox)
+        add_b.Bind(wx.EVT_BUTTON, handler=self.add_new_card)
+        finish_b.Bind(wx.EVT_BUTTON, handler=self.finish_call)
+        self.win.Show()
 
     def add_new_card(self, event=None):
-        front_side = self.front_side.get()
-        back_side = self.back_side.get()
+        front_side = self.front_entry.GetValue()
+        back_side = self.back_entry.GetValue()
         self.cards.add(front_side, back_side)
-        self.front_side.set("")
-        self.back_side.set("")
-        self.front_entry.focus_set()
+        self.front_entry.SetValue("")
+        self.back_entry.SetValue("")
+        self.front_entry.SetFocus()
 
-    def finish_call(self):
-        if self.front_side.get() and self.back_side.get():
+    def finish_call(self, event=None):
+        if self.front_entry.GetValue() and self.back_entry.GetValue():
             self.add_new_card()
-        self.win.destroy()
+        self.win.Destroy()
 
 if __name__ == "__main__":
-    root = Tk()
-    win = NewCardsWin(root, None)
-    root.mainloop()
-
+    app = wx.App()
+    f = wx.Frame(None)
+    f.Show()
+    w = NewCardsWin(f, None)
+    app.MainLoop()
         
