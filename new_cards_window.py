@@ -20,7 +20,8 @@ class NewCardsWin:
         
         size = (150, 22)
         self.front_entry = wx.TextCtrl(self.win, size=size)
-        self.back_entry = wx.TextCtrl(self.win, size=size)
+        self.back_entry = wx.TextCtrl(self.win, size=size, 
+                                      style=wx.TE_PROCESS_ENTER)
 
         front_label = wx.StaticText(self.win, label="Front:")
         back_label = wx.StaticText(self.win, label="Back:")
@@ -38,8 +39,10 @@ class NewCardsWin:
         buttons_frame.Add(finish_b, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
         vbox.Add(buttons_frame, flag=wx.ALIGN_CENTER)
         self.win.SetSizer(vbox)
+        
         add_b.Bind(wx.EVT_BUTTON, handler=self.add_new_card)
         finish_b.Bind(wx.EVT_BUTTON, handler=self.finish_call)
+        self.back_entry.Bind(wx.EVT_TEXT_ENTER, handler=self.add_new_card)
         self.win.Show()
 
     def add_new_card(self, event=None):

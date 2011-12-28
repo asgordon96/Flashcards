@@ -14,6 +14,7 @@
 
 import wx
 import pickle
+import os
 from card_set import FlashcardSet
 from new_cards_window import NewCardsWin
 #from quiz_window import QuizWindow
@@ -98,6 +99,7 @@ class MainWindow(wx.Frame):
         
         menubar.Append(cardsmenu, title="Cards")
         self.SetMenuBar(menubar)
+        self.Bind(wx.EVT_MENU, handler=self.on_open, id=open.GetId())
         
         self.Bind(wx.EVT_BUTTON, handler=self.show_next_card, 
                   id=self.next_b.GetId())
@@ -153,7 +155,7 @@ class MainWindow(wx.Frame):
             self.data_view.insert(END, (card[0], card[1], card.correct,
                                          card.incorrect, percent))
 
-    def show_next_card(self, event):
+    def show_next_card(self, event=None):
         """Method called to display the next flashcard in the set"""
         if len(self.flashcards) == 0:
             return
@@ -172,7 +174,7 @@ class MainWindow(wx.Frame):
         self.update_card_count()
         self.Layout()
 
-    def show_prev_card(self, event):
+    def show_prev_card(self, event=None):
         front = self.flashcards[self.index] [0]
         back  = self.flashcards[self.index] [1]
         self.card_front.SetLabel(front)
@@ -284,29 +286,33 @@ class MainWindow(wx.Frame):
 
     def on_open(self, event=None):
         """Show the dialog to open a file to load saved flashcards"""
-        open_window = tkFileDialog.Open(self.root, filetypes=[("Flashcard Set", "*.fld"),
-                                                              ("All Files", "*")])
-        filename = open_window.show()
-        try:
-            self.flashcards = FlashcardSet.load_set(filename)
-            file_last = filename.split("/") [-1]
-            self.root.title("%s" % (file_last))
-        except IOError:
-            print "Unable to read file"
-        self.saved = filename
-        self.show_next_card()
-        self.card_index = 1
-        self.update_card_count()
+        open_window = wx.FileDialog(self, style=wx.FD_OPEN)
+        if open_window.ShowModal() == wx.ID_OK:
+            filename = open_window.GetFilename()
+            dir = open_window.GetDirectory()
+            pathname = os.path.join(dir, filename)
+            try:
+                self.flashcards = FlashcardSet.load_set(pathname)
+                self.SetTitle(filename)
+            except IOError:
+                print "Unable to read file"
+            self.saved = filename
+            self.show_next_card()
+            self.card_index = 1
+            self.update_card_count()
 
     def on_save(self, event=None):
         """Save the current flashcard set to a file"""
         if not self.saved:
-            save_dialog = tkFileDialog.SaveAs(self.root)
-            save_name = save_dialog.show()
-            self.flashcards.save(save_name)
-            self.saved = save_name
-            real_name = save_name.split("/") [-1]
-            self.root.title("%s" % (real_name))
+            save_dialog = wx.FileDialog(self, style=wx.FD_SAVE)
+            if save_dialog.ShowModal() == wx.ID_OK:
+                filename = save_dialog.GetFilename()
+                dir = save_dialog.GetDirectory()
+                save_name = os.path.join(dir, filename)
+                self.flashcards.save(save_name)
+                self.saved = save_name
+                real_name = save_name.split("/") [-1]
+                self.SetTitle("%s" % (real_name))
         else:
             self.flashcards.save(self.saved)
             real_name = self.saved.split("/") [-1]
@@ -314,8 +320,7 @@ class MainWindow(wx.Frame):
         self.saved_changes = True
 
     def on_quit(self, event=None):
-        self.root.destroy()
-        
+        self.Destroy()
         
 app = wx.App()
 f = MainWindow(None)
