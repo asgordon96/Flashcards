@@ -2,8 +2,9 @@
 # STARTED: 10/14/11
 # A dialog window for creating new flashcards
 # Used by main_window.py
-from Tkinter import *
-from accent_entry import AccentEntry
+# NEW: converting the GUI to wxPython
+
+import wx
 
 class NewCardsWin:
     """The dialog window for making new flashcards"""
