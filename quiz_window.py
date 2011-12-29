@@ -3,14 +3,13 @@
 # The quiz window for the flashcard app. It is a question and answer quiz for
 # the user of the flashcards
 # STARTED: October 22 2011
-from Tkinter import *
-from accent_entry import AccentEntry
+import wx
 
 class QuizWindow:
     """The window where you take a quiz on the flashcards"""
     def __init__(self, master, cards):
         self.cards = cards
-        self.cards.shuffle()
+        #self.cards.shuffle()
         self.question_index = 0
         self.root = master
         self.correct = 0
@@ -19,40 +18,60 @@ class QuizWindow:
         self.initUI()
         
     def initUI(self):
-        myfont = ("default", "14")
-        self.window = Toplevel(self.root)
-        self.window.title("Quiz")
-        left_pane = Frame(self.window)
-        right_pane = Frame(self.window)
-        self.num_correct = Label(left_pane, text="Correct: 0", font=myfont)
-        self.num_incorrect = Label(left_pane, text="Incorrect: 0", font=myfont)
-        self.num_remaining = Label(left_pane, font=myfont,
-                               text="Remaining: %d" % (len(self.cards)))
-        self.num_correct.pack(pady=2)
-        self.num_incorrect.pack(pady=2)
-        self.num_remaining.pack(pady=2)
+        myfont = wx.Font(14, family=wx.MODERN, style=wx.NORMAL, weight=wx.NORMAL,
+                         face='lucida grande')
+        self.window = wx.Dialog(self.root, 
+                                style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        self.window.SetTitle("Quiz")
+        
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        left_pane = wx.BoxSizer(wx.VERTICAL)
+        right_pane = wx.BoxSizer(wx.VERTICAL)
+        
+        self.num_correct = wx.StaticText(self.window, label="Correct: 0")
+        self.num_correct.SetFont(myfont)
+        self.num_incorrect = wx.StaticText(self.window, label="Incorrect: 0")
+        self.num_incorrect.SetFont(myfont)
+        self.num_remaining = wx.StaticText(self.window, label="Remaining: %d" %
+                                           self.remaining)
+        self.num_remaining.SetFont(myfont)
+        
+        left_pane.Add((-1, 20))
+        left_pane.Add(self.num_correct, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        left_pane.Add(self.num_incorrect, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        left_pane.Add(self.num_remaining, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
 
-        mid_frame = Frame(right_pane)
+        mid_frame = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.question_label = Label(right_pane, text=self.cards[0] [0], font=myfont)
-        self.answer_box = AccentEntry(mid_frame, font="default")
-        self.answer_button = Button(mid_frame, text="Answer", command=self.on_answer)
-        self.result = Label(right_pane, text="", font=myfont)
-        self.result2 = Label(right_pane, text="", font=myfont)
-        self.next = Label(right_pane, text="", font=myfont)
-        self.answer_box.bind("<Return>", self.on_answer)
-        self.next.bind("<Return>", self.next_q)
-
-        self.answer_box.pack(side=LEFT, padx=5)
-        self.answer_button.pack(side=LEFT)
-        self.question_label.pack(pady=5)
-        mid_frame.pack(pady=5)
-        self.result.pack(pady=3)
-        self.result2.pack(pady=3)
-        self.next.pack(pady=3)
-
-        left_pane.pack(side=LEFT, padx=5)
-        right_pane.pack(side=LEFT, padx=5)
+        self.question_label = wx.StaticText(self.window, 
+                                            label=self.cards[0] [0])
+        self.question_label.SetFont(myfont)
+        right_pane.Add(self.question_label, flag=wx.ALL|wx.ALIGN_CENTER,
+                       border=5)
+        
+        self.answer_box = wx.TextCtrl(self.window, style=wx.TE_PROCESS_ENTER,
+                                      size=(175,22))
+        self.answer_button = wx.Button(self.window, label="Answer")
+        
+        mid_frame.Add(self.answer_box, flag=wx.ALL, border=5)
+        mid_frame.Add(self.answer_button, flag=wx.ALL, border=5)
+        right_pane.Add(mid_frame, flag=wx.ALL, border=5)
+        
+        self.result = wx.StaticText(self.window, label="Test")
+        self.result2 = wx.StaticText(self.window, label="Run")
+        self.next = wx.StaticText(self.window, label="<Return>")
+        self.result.SetFont(myfont)
+        self.result2.SetFont(myfont)
+        self.next.SetFont(myfont) 
+        
+        right_pane.Add(self.result, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        right_pane.Add(self.result2, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        right_pane.Add(self.next, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        
+        sizer.Add(left_pane)
+        sizer.Add(right_pane)
+        self.window.SetSizer(sizer)
+        self.window.Show()
 
     def on_answer(self, evnet=None):
         """Called when the user submits an answer. Checks its correctness and returns feedback"""
@@ -139,9 +158,11 @@ class QuizWindow:
         self.result2['text'] = ""
 
 if __name__ == "__main__":
-    root = Tk()
-    app = QuizWindow(root, [("volver", "vuelto"), ("morir", "muerto"),
+    app = wx.App()
+    f = wx.Frame(None)
+    f.Show()
+    win = QuizWindow(f, [("volver", "vuelto"), ("morir", "muerto"),
                             ("ver", "visto"),  ("escribir", "escrito")])
-    root.mainloop()
+    app.MainLoop()
 
         
