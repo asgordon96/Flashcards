@@ -26,7 +26,7 @@ class QuizWindow:
         
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         left_pane = wx.BoxSizer(wx.VERTICAL)
-        right_pane = wx.BoxSizer(wx.VERTICAL)
+        self.right_pane = wx.BoxSizer(wx.VERTICAL)
         
         self.num_correct = wx.StaticText(self.window, label="Correct: 0")
         self.num_correct.SetFont(myfont)
@@ -46,7 +46,7 @@ class QuizWindow:
         self.question_label = wx.StaticText(self.window, 
                                             label=self.cards[0] [0])
         self.question_label.SetFont(myfont)
-        right_pane.Add(self.question_label, flag=wx.ALL|wx.ALIGN_CENTER,
+        self.right_pane.Add(self.question_label, flag=wx.ALL|wx.ALIGN_CENTER,
                        border=5)
         
         self.answer_box = wx.TextCtrl(self.window, style=wx.TE_PROCESS_ENTER,
@@ -55,47 +55,50 @@ class QuizWindow:
         
         mid_frame.Add(self.answer_box, flag=wx.ALL, border=5)
         mid_frame.Add(self.answer_button, flag=wx.ALL, border=5)
-        right_pane.Add(mid_frame, flag=wx.ALL, border=5)
+        self.right_pane.Add(mid_frame, flag=wx.ALL, border=5)
         
-        self.result = wx.StaticText(self.window, label="Test")
-        self.result2 = wx.StaticText(self.window, label="Run")
-        self.next = wx.StaticText(self.window, label="<Return>")
+        self.result = wx.StaticText(self.window, label="")
+        self.result2 = wx.StaticText(self.window, label="")
         self.result.SetFont(myfont)
         self.result2.SetFont(myfont)
-        self.next.SetFont(myfont) 
+
+        self.right_pane.Add(self.result, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        self.right_pane.Add(self.result2, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
         
-        right_pane.Add(self.result, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
-        right_pane.Add(self.result2, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
-        right_pane.Add(self.next, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        self.answer_button.Bind(wx.EVT_BUTTON, handler=self.on_answer)
+        self.answer_box.Bind(wx.EVT_TEXT_ENTER, handler=self.on_answer)
         
         sizer.Add(left_pane)
-        sizer.Add(right_pane)
+        sizer.Add(self.right_pane)
         self.window.SetSizer(sizer)
         self.window.Show()
 
-    def on_answer(self, evnet=None):
+    def on_answer(self, evnet):
         """Called when the user submits an answer. Checks its correctness and returns feedback"""
         #print "in self.on_answer"
         the_card = self.cards[self.question_index] 
         the_answer = the_card[1].lower()
-        user_answer = self.answer_box.get().strip().lower()
-        print repr(user_answer)
-        print repr(the_answer)
+        user_answer = self.answer_box.GetValue().strip().lower()
+#        print repr(user_answer)
+#        print repr(the_answer)
         if the_answer == user_answer:
             self.correct += 1
-            the_card.correct += 1
-            self.result['text'] = "Correct!"
+            #the_card.correct += 1
+            self.result.SetLabel("Correct!")
+            self.result2.SetLabel("")
         else:
-            self.result['text'] = "Sorry. Incorrect"
-            self.result2['text'] = "Answer: %s" % (the_answer)
+            self.result.SetLabel("Sorry. Incorrect")
+            self.result2.SetLabel("Answer: %s" % (the_answer))
             self.incorrect += 1
-            the_card.incorrect += 1
+            #the_card.incorrect += 1
         self.remaining -=1
         self.update_scores()
-        self.answer_button['command'] = self.nothing
-        self.answer_box['state'] = DISABLED
-        self.next['text'] = "Press <Return> to continue"
-        self.next.focus_set()
+        self.answer_box.Disable()
+        self.next = wx.Button(self.window, label="Next")
+        self.right_pane.Add(self.next, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
+        self.next.SetDefault()
+        self.next.Bind(wx.EVT_BUTTON, handler=self.next_q)
+        self.window.Layout()
 
     def next_q(self, event=None):
         """Called to go to the next question. The card index is incremened"""
@@ -123,22 +126,23 @@ class QuizWindow:
             bot_frame.pack()
             
         else:
-            self.question_label['text'] = self.cards[self.question_index] [0]
-            self.result['text'] = ""
-            self.result2['text'] = ""
-            self.next['text'] = ""
-            self.answer_button['command'] = self.on_answer
-            self.answer_box['state'] = NORMAL
-            self.answer_box.delete(0, END)
-            self.answer_box.focus_set()
+            print 'here'
+            self.question_label.SetLabel(self.cards[self.question_index] [0])
+            self.result.SetLabel("")
+            self.result2.SetLabel("")
+            self.next.SetLabel("")
+            self.answer_box.Enable()
+            self.answer_box.SetValue("")
+            self.answer_box.SetFocus()
+            self.next.Destroy()
 
     def nothing(self):
         pass
 
     def update_scores(self):
-        self.num_correct['text'] = "Correct: %s" % (self.correct)
-        self.num_incorrect['text'] = "Incorrect: %s" % (self.incorrect)
-        self.num_remaining['text'] = "Remaining: %s" % (self.remaining)
+        self.num_correct.SetLabel("Correct: %s" % (self.correct))
+        self.num_incorrect.SetLabel("Incorrect: %s" % (self.incorrect))
+        self.num_remaining.SetLabel("Remaining: %s" % (self.remaining))
 
     def restart_quiz(self):
         self.cards.shuffle()
