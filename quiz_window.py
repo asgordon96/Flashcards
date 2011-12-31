@@ -5,6 +5,44 @@
 # STARTED: October 22 2011
 import wx
 
+class QuizAgainDialog(wx.Dialog):
+    """Dialog shown showing results of the quiz and asking if the user
+    wants to take the quiz again"""
+    def __init__(self, master, correct, incorrect):
+        super(QuizAgainDialog, self).__init__(master, size=(300, 150))
+        self.SetTitle("Again?")
+        
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        result_string = "You got %d out of %d questions correct" % (correct, incorrect)
+        percent_string = "Percentage: %d%%" % (round(float(correct) / incorrect * 100))
+        again_label = "Take the quiz again?"
+        result_label = wx.StaticText(self, label=result_string)
+        percent_label = wx.StaticText(self, label=percent_string)
+        again_label = wx.StaticText(self, label=again_label)
+        
+        buttons_box = wx.BoxSizer(wx.HORIZONTAL)
+        yes_button = wx.Button(self, label="Yes")
+        no_button = wx.Button(self, label="No")
+        yes_button.SetDefault()
+        buttons_box.Add(yes_button, flag=wx.ALL, border=3)
+        buttons_box.Add(no_button, flag=wx.ALL, border=3)
+                
+        vbox.Add(result_label, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        vbox.Add(percent_label, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        vbox.Add(again_label, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        vbox.Add(buttons_box, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        
+        yes_button.Bind(wx.EVT_BUTTON, handler=self.on_yes)
+        no_button.Bind(wx.EVT_BUTTON, handler=self.on_no)
+        
+        self.SetSizer(vbox)
+    
+    def on_yes(self, event):
+        self.EndModal(wx.ID_YES)
+    
+    def on_no(self, event):
+        self.EndModal(wx.ID_NO)
+        
 class QuizWindow:
     """The window where you take a quiz on the flashcards"""
     def __init__(self, master, cards):
@@ -126,7 +164,6 @@ class QuizWindow:
             bot_frame.pack()
             
         else:
-            print 'here'
             self.question_label.SetLabel(self.cards[self.question_index] [0])
             self.result.SetLabel("")
             self.result2.SetLabel("")
@@ -167,6 +204,8 @@ if __name__ == "__main__":
     f.Show()
     win = QuizWindow(f, [("volver", "vuelto"), ("morir", "muerto"),
                             ("ver", "visto"),  ("escribir", "escrito")])
+    d = QuizAgainDialog(f, 15, 19)
+    print d.ShowModal()
     app.MainLoop()
 
         
