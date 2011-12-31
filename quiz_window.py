@@ -8,13 +8,13 @@ import wx
 class QuizAgainDialog(wx.Dialog):
     """Dialog shown showing results of the quiz and asking if the user
     wants to take the quiz again"""
-    def __init__(self, master, correct, incorrect):
+    def __init__(self, master, correct, total):
         super(QuizAgainDialog, self).__init__(master, size=(300, 150))
         self.SetTitle("Again?")
         
         vbox = wx.BoxSizer(wx.VERTICAL)
-        result_string = "You got %d out of %d questions correct" % (correct, incorrect)
-        percent_string = "Percentage: %d%%" % (round(float(correct) / incorrect * 100))
+        result_string = "You got %d out of %d questions correct" % (correct, total)
+        percent_string = "Percentage: %d%%" % (round(float(correct) / total * 100))
         again_label = "Take the quiz again?"
         result_label = wx.StaticText(self, label=result_string)
         percent_label = wx.StaticText(self, label=percent_string)
@@ -58,8 +58,9 @@ class QuizWindow:
     def initUI(self):
         myfont = wx.Font(14, family=wx.MODERN, style=wx.NORMAL, weight=wx.NORMAL,
                          face='lucida grande')
-        self.window = wx.Dialog(self.root, 
+        self.window = wx.Dialog(self.root, size=(400, 200),
                                 style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        print self.window.GetSize()
         self.window.SetTitle("Quiz")
         
         sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -113,12 +114,9 @@ class QuizWindow:
 
     def on_answer(self, evnet):
         """Called when the user submits an answer. Checks its correctness and returns feedback"""
-        #print "in self.on_answer"
         the_card = self.cards[self.question_index] 
         the_answer = the_card[1].lower()
         user_answer = self.answer_box.GetValue().strip().lower()
-#        print repr(user_answer)
-#        print repr(the_answer)
         if the_answer == user_answer:
             self.correct += 1
             #the_card.correct += 1
@@ -139,29 +137,16 @@ class QuizWindow:
         self.window.Layout()
 
     def next_q(self, event=None):
-        """Called to go to the next question. The card index is incremened"""
-        myfont = ("default", "14")     
+        """Called to go to the next question. The card index is incremened"""   
         self.question_index += 1
         if self.question_index == len(self.cards):
-            self.dialog = Toplevel(self.window)
-            self.dialog.title("Again?")
             c = self.correct
             total = self.correct + self.incorrect
-            label = Label(self.dialog, text="You got %d out of %s questions right" % (c, total),
-                          font=myfont)                     
-            label.pack(pady=5, padx=5)
-            percentage = (self.correct / float(self.correct + self.incorrect)) * 100
-            percent_label = Label(self.dialog, text="Percentage: %d" % (percentage) + "%", font=myfont)
-            percent_label.pack(padx=5)
-            q = Label(self.dialog, text="Would you like to take the quiz again?", font=myfont)
-            q.pack(pady=5, padx=5)
-
-            bot_frame = Frame(self.dialog)
-            yes = Button(bot_frame, text="Yes", width=5, default='active', command=self.restart_quiz)
-            no = Button(bot_frame, text="No", width=5, command=self.window.destroy)
-            yes.pack(side=RIGHT, padx=5, pady=5)
-            no.pack(side=RIGHT, padx=5, pady=5)
-            bot_frame.pack()
+            again_dialog = QuizAgainDialog(self.window, self.correct, total)
+            if again_dialog.ShowModal() == wx.ID_YES:
+                self.restart_quiz()
+            else:
+                self.window.Destroy()
             
         else:
             self.question_label.SetLabel(self.cards[self.question_index] [0])
@@ -182,21 +167,19 @@ class QuizWindow:
         self.num_remaining.SetLabel("Remaining: %s" % (self.remaining))
 
     def restart_quiz(self):
-        self.cards.shuffle()
-        self.dialog.destroy()
+        #self.cards.shuffle()
         self.question_index = 0
-        self.question_label['text'] = self.cards[0] [0]
-        self.next['text'] = ""
-        self.answer_button['command'] = self.on_answer
-        self.answer_box['state'] = NORMAL
-        self.answer_box.delete(0, END)
-        self.answer_box.focus_set()
+        self.question_label.SetLabel(self.cards[0] [0])
+        self.answer_box.Enable()
+        self.answer_box.SetValue("")
+        self.answer_box.SetFocus()
         self.correct = 0
         self.incorrect = 0
         self.remaining = len(self.cards)
         self.update_scores()
-        self.result['text'] = ""
-        self.result2['text'] = ""
+        self.result.SetLabel("")
+        self.result2.SetLabel("")
+        self.next.Destroy()
 
 if __name__ == "__main__":
     app = wx.App()
@@ -205,7 +188,6 @@ if __name__ == "__main__":
     win = QuizWindow(f, [("volver", "vuelto"), ("morir", "muerto"),
                             ("ver", "visto"),  ("escribir", "escrito")])
     d = QuizAgainDialog(f, 15, 19)
-    print d.ShowModal()
     app.MainLoop()
 
         
