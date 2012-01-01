@@ -5,6 +5,30 @@
 # STARTED: October 22 2011
 import wx
 
+class QuizOptionsDialog(wx.Dialog):
+    """Dialog asking if the user wants to be quizzed on all cards or
+    only the most difficult ones"""
+    def __init__(self, master, card_set):
+        super(QuizOptionsDialog, self).__init__(master)
+        self.SetTitle("Quiz Options")
+        
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        grid = wx.FlexGridSizer(rows=2, cols=2, vgap=10, hgap=10)
+        
+        self.all_r = wx.RadioButton(self, label="All Cards", style=wx.RB_GROUP)
+        self.some_r = wx.RadioButton(self, label="Most Difficult")
+        self.all_r.SetValue(True)
+        choices = map(str, range(1, len(card_set)))
+        self.num_cards = wx.ComboBox(self, choices=choices, style=wx.CB_READONLY)
+        
+        grid.AddMany([(self.all_r, 0, wx.ALIGN_CENTER_VERTICAL), 
+                      (wx.StaticText(self, label="")),
+                      (self.some_r, 0, wx.ALIGN_CENTER_VERTICAL), (self.num_cards)])
+        
+        vbox.Add(grid, flag=wx.ALL, border=10)
+        self.SetSizer(vbox)
+        self.Show()
+        
 class QuizAgainDialog(wx.Dialog):
     """Dialog shown showing results of the quiz and asking if the user
     wants to take the quiz again"""
@@ -60,7 +84,6 @@ class QuizWindow:
                          face='lucida grande')
         self.window = wx.Dialog(self.root, size=(400, 200),
                                 style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
-        print self.window.GetSize()
         self.window.SetTitle("Quiz")
         
         sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -187,7 +210,7 @@ if __name__ == "__main__":
     f.Show()
     win = QuizWindow(f, [("volver", "vuelto"), ("morir", "muerto"),
                             ("ver", "visto"),  ("escribir", "escrito")])
-    d = QuizAgainDialog(f, 15, 19)
+    d = QuizOptionsDialog(f, range(10))
     app.MainLoop()
 
         
