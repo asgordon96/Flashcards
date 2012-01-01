@@ -9,8 +9,9 @@ class QuizOptionsDialog(wx.Dialog):
     """Dialog asking if the user wants to be quizzed on all cards or
     only the most difficult ones"""
     def __init__(self, master, card_set):
-        super(QuizOptionsDialog, self).__init__(master)
+        super(QuizOptionsDialog, self).__init__(master, size=(250,150))
         self.SetTitle("Quiz Options")
+        self.cards = card_set
         
         vbox = wx.BoxSizer(wx.VERTICAL)
         grid = wx.FlexGridSizer(rows=2, cols=2, vgap=10, hgap=10)
@@ -20,14 +21,41 @@ class QuizOptionsDialog(wx.Dialog):
         self.all_r.SetValue(True)
         choices = map(str, range(1, len(card_set)))
         self.num_cards = wx.ComboBox(self, choices=choices, style=wx.CB_READONLY)
+        self.num_cards.Disable()
+        
+        disable_menu = lambda event, x=self.num_cards: x.Disable()
+        enable_menu = lambda event, x=self.num_cards: x.Enable()
+        self.all_r.Bind(wx.EVT_RADIOBUTTON, handler=disable_menu)
+        self.some_r.Bind(wx.EVT_RADIOBUTTON, handler=enable_menu)
         
         grid.AddMany([(self.all_r, 0, wx.ALIGN_CENTER_VERTICAL), 
                       (wx.StaticText(self, label="")),
                       (self.some_r, 0, wx.ALIGN_CENTER_VERTICAL), (self.num_cards)])
         
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        self.start_quiz = wx.Button(self, label="Start Quiz")
+        self.start_quiz.SetDefault()
+        self.cancel = wx.Button(self, label="Cancel")
+        hbox.Add(self.start_quiz, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        hbox.Add(self.cancel, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        
         vbox.Add(grid, flag=wx.ALL, border=10)
+        vbox.Add(hbox, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        self.start_quiz.Bind(wx.EVT_BUTTON, handler=self.on_start_quiz)
+        self.cancel.Bind(wx.EVT_BUTTON, handler=self.on_cancel)
         self.SetSizer(vbox)
-        self.Show()
+    
+    def on_cancel(self, event):
+        self.EndModal(wx.ID_CANCEL)
+    
+    def on_start_quiz(self, event):
+        self.EndModal(wx.ID_OK)
+    
+    def get_num_cards(self):
+        if self.all_r.GetValue():
+            return len(self.cards)
+        else:
+            return int(self.num_cards.GetValue())
         
 class QuizAgainDialog(wx.Dialog):
     """Dialog shown showing results of the quiz and asking if the user
@@ -211,6 +239,8 @@ if __name__ == "__main__":
     win = QuizWindow(f, [("volver", "vuelto"), ("morir", "muerto"),
                             ("ver", "visto"),  ("escribir", "escrito")])
     d = QuizOptionsDialog(f, range(10))
+    if d.ShowModal() == wx.ID_OK:
+        print d.get_num_cards()
     app.MainLoop()
 
         
