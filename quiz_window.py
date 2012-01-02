@@ -99,7 +99,7 @@ class QuizWindow:
     """The window where you take a quiz on the flashcards"""
     def __init__(self, master, cards):
         self.cards = cards
-        #self.cards.shuffle()
+        self.cards.shuffle()
         self.question_index = 0
         self.root = master
         self.correct = 0
@@ -170,14 +170,14 @@ class QuizWindow:
         user_answer = self.answer_box.GetValue().strip().lower()
         if the_answer == user_answer:
             self.correct += 1
-            #the_card.correct += 1
+            the_card.correct += 1
             self.result.SetLabel("Correct!")
             self.result2.SetLabel("")
         else:
             self.result.SetLabel("Sorry. Incorrect")
             self.result2.SetLabel("Answer: %s" % (the_answer))
             self.incorrect += 1
-            #the_card.incorrect += 1
+            the_card.incorrect += 1
         self.remaining -=1
         self.update_scores()
         self.answer_box.Disable()
@@ -218,7 +218,7 @@ class QuizWindow:
         self.num_remaining.SetLabel("Remaining: %s" % (self.remaining))
 
     def restart_quiz(self):
-        #self.cards.shuffle()
+        self.cards.shuffle()
         self.question_index = 0
         self.question_label.SetLabel(self.cards[0] [0])
         self.answer_box.Enable()

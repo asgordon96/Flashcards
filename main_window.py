@@ -17,7 +17,7 @@ import pickle
 import os
 from card_set import FlashcardSet
 from new_cards_window import NewCardsWin
-#from quiz_window import QuizWindow
+from quiz_window import QuizWindow, QuizOptionsDialog
 #from edit_window import EditWindow
 
 class MainWindow(wx.Frame):
@@ -107,6 +107,8 @@ class MainWindow(wx.Frame):
                   id=self.prev_b.GetId())
         self.Bind(wx.EVT_BUTTON, handler=self.new_cards_window,
                   id=self.new_b.GetId())
+        self.Bind(wx.EVT_BUTTON, handler=self.quiz,
+                  id=self.quiz_b.GetId())
 
         # Accelerator key binding
 #        self.root.bind("<Command-o>", self.on_open)
@@ -264,18 +266,17 @@ class MainWindow(wx.Frame):
         start_quiz_b.pack(pady=5)
         
     
-    def quiz(self):
+    def quiz(self, event):
         """Display the quiz window. Start the actual flashcard quiz"""
-        cards_for_quiz = FlashcardSet()
-        cards_for_quiz.cards = self.flashcards.cards[:]
-        if self.text_var.get() == "diff":
-            number_cards = int(self.num_cards_var.get())
+        quiz_options = QuizOptionsDialog(self, self.flashcards)
+        if quiz_options.ShowModal() == wx.ID_OK:
+            cards_for_quiz = FlashcardSet()
+            cards_for_quiz.cards = self.flashcards.cards[:]
+            number_cards = quiz_options.get_num_cards()
             cards_for_quiz.sort_by_percentage()
             cards_for_quiz.cards = cards_for_quiz.cards[:number_cards]
             #print cards_for_quiz
-        
-        self.quiz_start.destroy()
-        quizwin = QuizWindow(self.root, cards_for_quiz)
+            quizwin = QuizWindow(self, cards_for_quiz)
 
     def edit_cards(self):
         editwin = EditWindow(self.root, self.flashcards)
