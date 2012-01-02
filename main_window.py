@@ -235,36 +235,6 @@ class MainWindow(wx.Frame):
         old_title = self.GetTitle()
         if old_title[0] != "*":
             self.SetTitle("*%s" % (old_title))
-        
-
-    def quiz_begin(self):
-        """Shows a window asking to quiz on all cards, or only
-           difficult ones"""
-        self.quiz_start = Toplevel(self.root)
-        mid_pane = Frame(self.quiz_start)
-        self.text_var = StringVar()
-        self.text_var.set("all")
-        self.num_cards_var = StringVar()
-        n_cards_options = [str(item) for item in range(1, len(self.flashcards) + 1)]
-        all_cards = Radiobutton(self.quiz_start, text="All Cards", value="all", 
-                                variable=self.text_var)
-        diff_cards = Radiobutton(mid_pane, text="Difficult Cards", 
-                                 value="diff", variable=self.text_var)
-        num_cards = OptionMenu(mid_pane, self.num_cards_var, *n_cards_options)
-        num_cards.config(state='disabled')
-        self.num_cards_var.set('1')
-        enable = lambda x=num_cards: x.config(state='normal')
-        disable = lambda x=num_cards: x.config(state='disabled')
-        diff_cards['command'] = enable
-        all_cards['command'] = disable
-        start_quiz_b = Button(self.quiz_start, text="Start Quiz!",
-                              command=self.quiz)
-        all_cards.pack(padx=5, pady=5, anchor=W)
-        diff_cards.pack(padx=5, pady=5, anchor=W, side=LEFT)
-        num_cards.pack(padx=5, pady=5, side=LEFT)
-        mid_pane.pack()
-        start_quiz_b.pack(pady=5)
-        
     
     def quiz(self, event):
         """Display the quiz window. Start the actual flashcard quiz"""
