@@ -1,12 +1,63 @@
-#! usr/bin/env python
+#! /usr/bin/env python
 # edit_window.py
 # Go to this window when editing the flashcards
 # STARTED: November 2, 2011
 
 import wx
-from card_set import FlashcardSet
+from card_set import FlashcardSet, Flashcard
 
-class EditWindow:
+class EditDialog(wx.Dialog):
+    """A dialog window to change or delete a single flashcard"""
+    def __init__(self, master, title, card):
+        super(EditDialog, self).__init__(master, title=title, size=(300, 150),
+              style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        self.edited_card = None
+        
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        
+        grid = wx.FlexGridSizer(rows=2, cols=2, vgap=10, hgap=10)
+        
+        front_label = wx.StaticText(self, label="Front:")
+        back_label = wx.StaticText(self, label="Back:")
+        self.front_entry = wx.TextCtrl(self, size=(150, -1))
+        self.back_entry = wx.TextCtrl(self, size=(150, -1))
+        
+        self.front_entry.SetValue(card[0])
+        self.back_entry.SetValue(card[1])
+        
+        buttons_box = wx.BoxSizer(wx.HORIZONTAL)
+        finish_b = wx.Button(self, label="Finish")
+        cancel_b = wx.Button(self, label="Cancel")
+        delete_b = wx.Button(self, label="Delete")
+        buttons_box.Add(finish_b, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        buttons_box.Add(delete_b, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        buttons_box.Add(cancel_b, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        
+        grid.AddMany([(front_label), (self.front_entry), 
+                      (back_label), (self.back_entry)])
+        
+        vbox.Add(grid, flag=wx.ALL, border=10)
+        vbox.Add(buttons_box, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        
+        finish_b.Bind(wx.EVT_BUTTON, handler=self.on_finish)
+        cancel_b.Bind(wx.EVT_BUTTON, handler=self.on_cancel)
+        delete_b.Bind(wx.EVT_BUTTON, handler=self.on_delete)
+        
+        self.SetSizer(vbox)
+
+    def on_finish(self, event):
+        self.edited_card = Flashcard(self.front_entry.GetValue(), 
+                                self.back_entry.GetValue())
+        self.EndModal(wx.ID_OK)
+    
+    def on_cancel(self, event):
+        self.EndModal(wx.ID_CANCEL)
+    
+    def on_delete(self, event):
+        self.EndModal(wx.ID_DELETE)
+        
+        
+class ViewCardsWindow:
     """The window for editing the flashcards"""
     def __init__(self, master, flashcards):
         self.win = wx.Dialog(master, title="View Cards",
@@ -48,46 +99,33 @@ class EditWindow:
         vbox.Add(self.listbox, proportion=1, flag=wx.ALL|wx.EXPAND, border=5)
         self.win.SetSizer(vbox)
         self.win.Show()
-            
-#        right_panel = Frame(self.win)
-#        top_frame = Frame(right_panel)
-#        bot_frame = Frame(right_panel)
-
-#        self.change_b = Button(bot_frame, text="Change")
-#        self.delete_b = Button(bot_frame, text="Delete")
-#        self.change_b.pack(side=RIGHT, anchor=E)
-#        self.delete_b.pack(side=RIGHT, anchor=E)
-        
-#        label_frame = Frame(top_frame)
-#        front = Label(label_frame, text="Front: ")
-#        back = Label(label_frame, text="Back: ")
-        
-#        entry_frame = Frame(top_frame)
-#        self.entry1 = AccentEntry(entry_frame)
-#        self.entry2 = AccentEntry(entry_frame)
-
-#        front.pack(pady=7, anchor=W)
-#        back.pack(pady=7, anchor=W)
-#        self.entry1.pack(pady=5)
-#        self.entry2.pack(pady=5)
-#        entry_frame.pack(side=RIGHT)
-#        label_frame.pack(side=RIGHT)
-#        top_frame.pack(pady=5)
-#        bot_frame.pack()
-#        self.listbox.pack(side=LEFT, pady=3, padx=5)
-#        right_panel.pack(side=LEFT, padx=5)
-
-#        self.listbox.lists[0].bind("<ButtonRelease-1>", self.update_text)
-#        self.listbox.lists[1].bind("<ButtonRelease-1>", self.update_text)
-#        self.change_b['command'] = self.change_card
-#        self.delete_b['command'] = self.delete_card
 
     def edit_cards(self, event):
         """Called when a listCtrl item in double-clicked. Displays a dialog
         for editing and deleting cards"""
         index = event.m_itemIndex
         the_card = self.data_d[self.listbox.GetItemData(index)]
-        print the_card
+        edit_win = EditDialog(self.win, title="Edit Cards", card=the_card)
+        show_id = edit_win.ShowModal()
+        if show_id == wx.ID_OK:
+            new_card = edit_win.edited_card
+            card_index = self.cards.cards.index(the_card)
+            del self.cards[card_index]
+            self.cards.cards.insert(card_index, new_card)
+            
+            self.listbox.DeleteItem(index)
+            self.listbox.InsertStringItem(index, new_card[0])
+            self.listbox.SetStringItem(index, 1, new_card[1])
+            self.listbox.SetStringItem(index, 2, '0')
+            self.listbox.SetStringItem(index, 3, '0')
+            self.listbox.SetStringItem(index, 4, '0.0%')
+            print self.cards
+            
+        elif show_id == wx.ID_DELETE:
+            card_i = self.cards.cards.index(the_card)
+            del self.cards[card_i]
+            self.listbox.DeleteItem(index)
+            print self.cards
         
     def update_text(self, event):
         """Called when a listbox item in selected. So the text in the entry 
@@ -131,7 +169,7 @@ if __name__ == "__main__":
     test_cards.add("Python", "Tkinter")
     test_cards.add("Flashcards", "App")
     test_cards.add("The Zen", "Of Python") 
-    view_win = EditWindow(f, test_cards)
+    view_win = ViewCardsWindow(f, test_cards)
     app.MainLoop()
 
         
