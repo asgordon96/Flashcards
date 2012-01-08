@@ -122,43 +122,15 @@ class ViewCardsWindow:
             print self.cards
             
         elif show_id == wx.ID_DELETE:
-            card_i = self.cards.cards.index(the_card)
-            del self.cards[card_i]
-            self.listbox.DeleteItem(index)
-            print self.cards
-        
-    def update_text(self, event):
-        """Called when a listbox item in selected. So the text in the entry 
-        boxes is updated"""
-        self.cur_index = int(self.listbox.curselection() [0])
-        #selected = self.listbox.get(self.cur_index)
-        #selected = selected.split()
-        self.entry1.delete(0, END)
-        self.entry2.delete(0, END)
-        cur_card = self.cards[self.cur_index]
-        self.entry1.insert(0, cur_card[0])
-        self.entry2.insert(0, cur_card[1])
-
-    def change_card(self):
-        """Called when the user presses the 'change' button.
-           Changes the flashcards"""
-        new_front = self.entry1.get()
-        new_back = self.entry2.get()
-        self.cards.replace(self.cur_index, new_front, new_back)
-        self.listbox.delete(self.cur_index)
-        self.listbox.insert(self.cur_index, (new_front, new_back))
-        #print self.cards
-
-    def delete_card(self):
-        """Called to delete a flashcard. Check if the user really wants to with a
-           message box"""
-        del_cards = tkMessageBox.askokcancel(title="Delete Cards", parent=self.win,
-                                 message="Are you sure you want to delete this flashcard?")
-        if del_cards:
-            del self.cards[self.cur_index] 
-            self.listbox.delete(self.cur_index)
-            #print self.cards
-        
+            del_message = "Are you sure you want to delete this card?"
+            confirm_delete = wx.MessageDialog(self.win, message=del_message,
+                                              caption="Delete Card?",
+                                              style=wx.YES_NO|wx.YES_DEFAULT)
+            if confirm_delete.ShowModal() == wx.ID_YES:
+                card_i = self.cards.cards.index(the_card)
+                del self.cards[card_i]
+                self.listbox.DeleteItem(index)
+                print self.cards
 
 if __name__ == "__main__":
     app = wx.App()
