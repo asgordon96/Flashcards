@@ -18,7 +18,7 @@ import os
 from card_set import FlashcardSet
 from new_cards_window import NewCardsWin
 from quiz_window import QuizWindow, QuizOptionsDialog
-#from edit_window import EditWindow
+from edit_window import ViewCardsWindow
 
 class MainWindow(wx.Frame):
     """The main control window of the Flashcard Application"""
@@ -109,6 +109,8 @@ class MainWindow(wx.Frame):
                   id=self.new_b.GetId())
         self.Bind(wx.EVT_BUTTON, handler=self.quiz,
                   id=self.quiz_b.GetId())
+        self.Bind(wx.EVT_BUTTON, handler=self.edit_cards,
+                  id=self.view_b.GetId())
 
         # Accelerator key binding
 #        self.root.bind("<Command-o>", self.on_open)
@@ -248,12 +250,12 @@ class MainWindow(wx.Frame):
             #print cards_for_quiz
             quizwin = QuizWindow(self, cards_for_quiz)
 
-    def edit_cards(self):
-        editwin = EditWindow(self.root, self.flashcards)
-        self.save_changes = False
-        old_title = self.root.title()
-        if old_title[0] != "*":
-            self.root.title("*%s" % (old_title))
+    def edit_cards(self, event):
+        editwin = ViewCardsWindow(self, self.flashcards)
+#        self.save_changes = False
+#        old_title = self.root.title()
+#        if old_title[0] != "*":
+#            self.root.title("*%s" % (old_title))
 
     def on_open(self, event=None):
         """Show the dialog to open a file to load saved flashcards"""
@@ -287,7 +289,7 @@ class MainWindow(wx.Frame):
         else:
             self.flashcards.save(self.saved)
             real_name = self.saved.split("/") [-1]
-            self.root.title("%s" % (real_name))
+            self.SetTitle("%s" % (real_name))
         self.saved_changes = True
 
     def on_quit(self, event=None):

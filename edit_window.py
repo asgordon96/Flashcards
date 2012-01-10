@@ -84,7 +84,8 @@ class ViewCardsWindow:
             self.listbox.SetStringItem(index, 1, card[1])
             self.listbox.SetStringItem(index, 2, str(card.correct))
             self.listbox.SetStringItem(index, 3, str(card.incorrect))
-            self.listbox.SetStringItem(index, 4, "%.1f%%" % (card.percentage()))
+            perc = "%d" % (card.percentage() * 100)
+            self.listbox.SetStringItem(index, 4, perc)
             self.listbox.SetItemData(index, id(card))
             self.data_d[id(card)] = card
             index += 1
