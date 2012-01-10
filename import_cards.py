@@ -67,7 +67,7 @@ class ImportCardsDialog(wx.Dialog):
         """Imports the flashcards set at the specified url"""
         try:
             self.cards = get_cards_export(self.url_text.GetValue())
-            print self.cards
+#            print self.cards
             self.EndModal(wx.ID_OK)
         except urllib2.HTTPError:
             d = wx.MessageDialog(self, message="URL not found", caption="Error",
@@ -76,6 +76,9 @@ class ImportCardsDialog(wx.Dialog):
     
     def on_cancel(self, event):
         self.EndModal(wx.ID_CANCEL)
+    
+    def get_flashcards(self):
+        return self.cards
 
 if __name__ == "__main__":
     app = wx.App()

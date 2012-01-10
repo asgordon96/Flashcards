@@ -19,6 +19,7 @@ from card_set import FlashcardSet
 from new_cards_window import NewCardsWin
 from quiz_window import QuizWindow, QuizOptionsDialog
 from edit_window import ViewCardsWindow
+from import_cards import ImportCardsDialog
 
 class MainWindow(wx.Frame):
     """The main control window of the Flashcard Application"""
@@ -96,10 +97,12 @@ class MainWindow(wx.Frame):
         shuffle = cardsmenu.Append(id=-1, text="Shuffle Cards")
         view_all = cardsmenu.Append(id=-1, text="View Cards\tCtrl+V")
         find = cardsmenu.Append(id=-1, text="Find\tCtrl+F")
+        load_cards = cardsmenu.Append(id=-1, text="Load from Quizlet")
         
         menubar.Append(cardsmenu, title="Cards")
         self.SetMenuBar(menubar)
         self.Bind(wx.EVT_MENU, handler=self.on_open, id=open.GetId())
+        self.Bind(wx.EVT_MENU, handler=self.on_import, id=load_cards.GetId())
         
         self.Bind(wx.EVT_BUTTON, handler=self.show_next_card, 
                   id=self.next_b.GetId())
@@ -168,6 +171,11 @@ class MainWindow(wx.Frame):
         back  = self.flashcards[self.index] [1]
         self.card_front.SetLabel(front)
         self.card_back.SetLabel(back)
+        self.card_front.SetSize(self.card_front.GetBestSize())
+        self.card_back.SetSize(self.card_back.GetBestSize())
+        self.card_front.Wrap(self.GetSize() [0])
+        self.card_back.Wrap(self.GetSize() [0])
+        
         self.index += 1
         if self.index == len(self.flashcards):
             self.index = 0
@@ -176,6 +184,10 @@ class MainWindow(wx.Frame):
         else:
             self.card_index += 1
         self.update_card_count()
+        if self.GetSize() [1] < self.card_back.GetSize() [1]:
+            print 'here'
+        self.SetSize((-1, self.GetBestSize() [1]))
+        self.SendSizeEvent()
         self.Layout()
 
     def show_prev_card(self, event=None):
@@ -257,6 +269,12 @@ class MainWindow(wx.Frame):
 #        if old_title[0] != "*":
 #            self.root.title("*%s" % (old_title))
 
+    def on_import(self, event):
+        """Shows a dialog for importing flashcard sets from Quizlet"""
+        import_d = ImportCardsDialog(self, title="Import Cards")
+        if import_d.ShowModal() == wx.ID_OK:
+            self.flashcards = import_d.get_flashcards()
+    
     def on_open(self, event=None):
         """Show the dialog to open a file to load saved flashcards"""
         open_window = wx.FileDialog(self, style=wx.FD_OPEN)
