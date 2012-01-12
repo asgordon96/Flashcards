@@ -27,11 +27,11 @@ class MainWindow(wx.Frame):
         super(MainWindow, self).__init__(master, -1, size=(500, 265))
         self.flashcards = FlashcardSet()
 ##        Here for testing purposes only
-        self.flashcards.add("vencer", "to defeat")
-        self.flashcards.add("conseguir", "to achieve")
-        self.flashcards.add("fingir", "to pretend")
-        self.flashcards.add("proteger", "to protect")
-        self.flashcards.add("merecer", "to deserve")
+#        self.flashcards.add("vencer", "to defeat")
+#        self.flashcards.add("conseguir", "to achieve")
+#        self.flashcards.add("fingir", "to pretend")
+#        self.flashcards.add("proteger", "to protect")
+#        self.flashcards.add("merecer", "to deserve")
         self.index = 0
         
         self.card_index = 1
@@ -102,7 +102,10 @@ class MainWindow(wx.Frame):
         menubar.Append(cardsmenu, title="Cards")
         self.SetMenuBar(menubar)
         self.Bind(wx.EVT_MENU, handler=self.on_open, id=open.GetId())
+        self.Bind(wx.EVT_MENU, handler=self.on_save, id=save.GetId())
         self.Bind(wx.EVT_MENU, handler=self.on_import, id=load_cards.GetId())
+        self.Bind(wx.EVT_MENU, handler=self.on_quit, id=quit.GetId())
+        self.Bind(wx.EVT_CLOSE, handler=self.on_quit)
         
         self.Bind(wx.EVT_BUTTON, handler=self.show_next_card, 
                   id=self.next_b.GetId())
@@ -114,6 +117,7 @@ class MainWindow(wx.Frame):
                   id=self.quiz_b.GetId())
         self.Bind(wx.EVT_BUTTON, handler=self.edit_cards,
                   id=self.view_b.GetId())
+        
 
         # Accelerator key binding
 #        self.root.bind("<Command-o>", self.on_open)
@@ -184,8 +188,8 @@ class MainWindow(wx.Frame):
         else:
             self.card_index += 1
         self.update_card_count()
-        if self.GetSize() [1] < self.card_back.GetSize() [1]:
-            print 'here'
+#        if self.GetSize() [1] < self.card_back.GetSize() [1]:
+#            print 'here'
         self.SetSize((-1, self.GetBestSize() [1]))
         self.SendSizeEvent()
         self.Layout()
@@ -245,7 +249,7 @@ class MainWindow(wx.Frame):
 
     def new_cards_window(self, event):
         win = NewCardsWin(self, self.flashcards)
-        self.save_changes = False
+        self.saved_changes = False
         old_title = self.GetTitle()
         if old_title[0] != "*":
             self.SetTitle("*%s" % (old_title))
@@ -287,7 +291,7 @@ class MainWindow(wx.Frame):
                 self.SetTitle(filename)
             except IOError:
                 print "Unable to read file"
-            self.saved = filename
+            self.saved = pathname
             self.show_next_card()
             self.card_index = 1
             self.update_card_count()
@@ -311,6 +315,13 @@ class MainWindow(wx.Frame):
         self.saved_changes = True
 
     def on_quit(self, event=None):
+        if not self.saved_changes:
+            m = "You have unsaved changes. Save them before quitting?"
+            ask_save_d = wx.MessageDialog(self, caption="Save before quitting?",
+                                          message=m, style=wx.YES|wx.NO|wx.YES_DEFAULT)
+            if ask_save_d.ShowModal() == wx.ID_YES:
+                self.on_save()
+
         self.Destroy()
         
 app = wx.App()
