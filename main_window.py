@@ -21,6 +21,54 @@ from quiz_window import QuizWindow, QuizOptionsDialog
 from edit_window import ViewCardsWindow
 from import_cards import ImportCardsDialog
 
+class FindCardWin(wx.Dialog):
+    """Dialog for finding cards in the set"""
+    def __init__(self, parent, title, cards):
+        super(FindCardWin, self).__init__(parent, title=title, size=(350, 150),
+              style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        
+        find_label = wx.StaticText(self, label="Find:")
+        self.user_search = wx.TextCtrl(self, size=(150, -1))
+        next_b = wx.Button(self, label="Next")
+        self.result_label = wx.StaticText(self, label="")
+        hbox.Add(find_label, flag=wx.ALL, border=5)
+        hbox.Add(self.user_search, flag=wx.ALL, border=5)
+        hbox.Add(next_b, flag=wx.ALL, border=5)
+        vbox.Add(hbox, flag=wx.ALL, border=10)
+        vbox.Add(self.result_label, flag=wx.ALL|wx.ALIGN_CENTER, border=5)
+        
+        next_b.Bind(wx.EVT_BUTTON, handler=self.find)
+        self.user_search.Bind(wx.EVT_TEXT, handler=self.search)
+        
+        self.SetSizer(vbox)
+        self.Show()
+        
+        self.cards = cards
+        self.matches = []
+    
+    def search(self, event):
+        """Called when the search changes. Finds all cards matching the search"""
+        query = self.user_search.GetValue().strip()
+        self.matches = []
+        for index, item in enumerate(self.cards):
+            if query in item[0] or query in item[1]:
+                self.matches.append(index)
+        self.search_index = 0
+        self.result_label.SetLabel("%d matches found" % (len(self.matches)))
+                
+    def find(self, event=None):
+         if self.matches:
+             if self.search_index >= len(self.matches):
+                 self.search_index = 0
+             self.GetParent().index = self.matches[self.search_index]
+             self.GetParent().show_next_card()
+             self.search_index += 1
+             self.Layout()
+        
+                 
 class MainWindow(wx.Frame):
     """The main control window of the Flashcard Application"""
     def __init__(self, master):
@@ -104,6 +152,7 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_MENU, handler=self.on_open, id=open.GetId())
         self.Bind(wx.EVT_MENU, handler=self.on_save, id=save.GetId())
         self.Bind(wx.EVT_MENU, handler=self.on_import, id=load_cards.GetId())
+        self.Bind(wx.EVT_MENU, handler=self.find_card_win, id=find.GetId())
         self.Bind(wx.EVT_MENU, handler=self.on_quit, id=quit.GetId())
         self.Bind(wx.EVT_CLOSE, handler=self.on_quit)
         
@@ -210,38 +259,27 @@ class MainWindow(wx.Frame):
         self.Layout()
     
     def find_card_win(self, event=None):
-        self.find_win = Toplevel(self.root)
-        top_frame = Frame(self.find_win)
-        self.find_win.title("Find Card")
+        win = FindCardWin(self, title="Find Cards", cards=self.flashcards)
+                  
+#        self.find_win = Toplevel(self.root)
+#        top_frame = Frame(self.find_win)
+#        self.find_win.title("Find Card")
         
-        label = Label(top_frame, text="Search: ")
-        self.user_search = Entry(top_frame)
-        label.pack(side=LEFT, pady=5, padx=5)
-        self.user_search.pack(side=LEFT, pady=5)
-        self.user_search.focus_set()
-        self.find_b = Button(top_frame, text="Find", width=5, command=self.find)
-        self.find_b.pack(pady=5)
-        top_frame.pack()
+#        label = Label(top_frame, text="Search: ")
+#        self.user_search = Entry(top_frame)
+#        label.pack(side=LEFT, pady=5, padx=5)
+#        self.user_search.pack(side=LEFT, pady=5)
+#        self.user_search.focus_set()
+#        self.find_b = Button(top_frame, text="Find", width=5, command=self.find)
+#        self.find_b.pack(pady=5)
+#        top_frame.pack()
         
-        self.result_label = Label(self.find_win, text="Results: ", 
-                                  font=('default', '14'))
-        self.result_label.pack(pady=5)
-        self.user_search.bind("<Return>", self.find)
+#        self.result_label = Label(self.find_win, text="Results: ", 
+#                                  font=('default', '14'))
+#        self.result_label.pack(pady=5)
+#        self.user_search.bind("<Return>", self.find)
     
-    def find(self, event=None):
-        query = self.user_search.get().strip()
-        card_found = False
-        for i in range(len(self.flashcards)):
-            card = self.flashcards[i]
-            if (query in card[0]) or (query in card[1]):
-                card_found = True
-                break
-        if card_found:
-            self.index = i
-            self.show_next_card()
-            self.result_label['text'] = "%s %s" % (card[0], card[1])
-        else:
-            self.result_label['text'] = "No Matches Found"
+
     
     def update_card_count(self):
         """Update the text of the counter for the card number. i.e. 5 / 26, or 10 / 21"""
