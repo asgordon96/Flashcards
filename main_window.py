@@ -27,13 +27,17 @@ class FindCardWin(wx.Dialog):
         super(FindCardWin, self).__init__(parent, title=title, size=(350, 150),
               style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         
+        panel = wx.Panel(self)
         vbox = wx.BoxSizer(wx.VERTICAL)
         hbox = wx.BoxSizer(wx.HORIZONTAL)
+        font = wx.Font(20, family=wx.MODERN, weight=wx.NORMAL, style=wx.NORMAL,
+                       faceName = 'times')
         
-        find_label = wx.StaticText(self, label="Find:")
-        self.user_search = wx.TextCtrl(self, size=(150, -1))
-        next_b = wx.Button(self, label="Next")
-        self.result_label = wx.StaticText(self, label="")
+        find_label = wx.StaticText(panel, label="Find:")
+        self.user_search = wx.TextCtrl(panel, size=(150, -1))
+        next_b = wx.Button(panel, label="Next")
+        self.result_label = wx.StaticText(panel, label="")
+        self.result_label.SetFont(font) 
         hbox.Add(find_label, flag=wx.ALL, border=5)
         hbox.Add(self.user_search, flag=wx.ALL, border=5)
         hbox.Add(next_b, flag=wx.ALL, border=5)
@@ -43,7 +47,7 @@ class FindCardWin(wx.Dialog):
         next_b.Bind(wx.EVT_BUTTON, handler=self.find)
         self.user_search.Bind(wx.EVT_TEXT, handler=self.search)
         
-        self.SetSizer(vbox)
+        panel.SetSizer(vbox)
         self.Show()
         
         self.cards = cards
@@ -58,6 +62,7 @@ class FindCardWin(wx.Dialog):
                 self.matches.append(index)
         self.search_index = 0
         self.result_label.SetLabel("%d matches found" % (len(self.matches)))
+        self.Layout()
                 
     def find(self, event=None):
          if self.matches:
@@ -72,7 +77,8 @@ class FindCardWin(wx.Dialog):
 class MainWindow(wx.Frame):
     """The main control window of the Flashcard Application"""
     def __init__(self, master):
-        super(MainWindow, self).__init__(master, -1, size=(500, 265))
+        super(MainWindow, self).__init__(master, -1, size=(500, 295), 
+              style=wx.WANTS_CHARS|wx.DEFAULT_FRAME_STYLE)
         self.flashcards = FlashcardSet()
 ##        Here for testing purposes only
 #        self.flashcards.add("vencer", "to defeat")
@@ -107,6 +113,7 @@ class MainWindow(wx.Frame):
         
         next_back_frame = wx.BoxSizer(wx.HORIZONTAL)
         
+        self.show_back = wx.Button(self, label="Show Back")
         self.next_b = wx.Button(self, label="Next")
         self.prev_b = wx.Button(self, label="Prev") 
         next_back_frame.Add(self.prev_b, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
@@ -115,7 +122,9 @@ class MainWindow(wx.Frame):
         vbox.Add(self.card_front, flag=wx.ALIGN_CENTER|wx.ALL, border=10)
         vbox.Add(self.card_back, flag=wx.ALIGN_CENTER|wx.ALL, border=10)
         vbox.Add(self.card_number, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
+        vbox.Add(self.show_back, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
         vbox.Add(next_back_frame, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
+        vbox.Add(wx.StaticLine(self, id=-1, style=wx.LI_HORIZONTAL), flag=wx.ALIGN_CENTER|wx.EXPAND, border=5)
         
         b_size = (150, 22)
         buttons_box = wx.BoxSizer(wx.HORIZONTAL)
@@ -126,7 +135,7 @@ class MainWindow(wx.Frame):
         buttons_box.Add(self.view_b, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
         buttons_box.Add(self.quiz_b, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
         
-        vbox.Add(buttons_box, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
+        vbox.Add(buttons_box, flag=wx.ALIGN_CENTER|wx.ALL, border=10)
         self.SetSizer(vbox)
         self.Show()
         
@@ -143,10 +152,11 @@ class MainWindow(wx.Frame):
 
         cardsmenu = wx.Menu()
         shuffle = cardsmenu.Append(id=-1, text="Shuffle Cards")
+        self.show_both_sides = cardsmenu.AppendCheckItem(id=-1, text="Show Both Sides")
         view_all = cardsmenu.Append(id=-1, text="View Cards\tCtrl+V")
         find = cardsmenu.Append(id=-1, text="Find\tCtrl+F")
         load_cards = cardsmenu.Append(id=-1, text="Load from Quizlet")
-        
+
         menubar.Append(cardsmenu, title="Cards")
         self.SetMenuBar(menubar)
         self.Bind(wx.EVT_MENU, handler=self.on_open, id=open.GetId())
@@ -156,18 +166,20 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_MENU, handler=self.on_quit, id=quit.GetId())
         self.Bind(wx.EVT_CLOSE, handler=self.on_quit)
         
+        self.Bind(wx.EVT_KEY_DOWN, handler=self.on_key_pressed)
         self.Bind(wx.EVT_BUTTON, handler=self.show_next_card, 
                   id=self.next_b.GetId())
         self.Bind(wx.EVT_BUTTON, handler=self.show_prev_card,
                   id=self.prev_b.GetId())
+        self.Bind(wx.EVT_BUTTON, handler=self.show_back_of_card,
+                  id=self.show_back.GetId())
         self.Bind(wx.EVT_BUTTON, handler=self.new_cards_window,
                   id=self.new_b.GetId())
         self.Bind(wx.EVT_BUTTON, handler=self.quiz,
                   id=self.quiz_b.GetId())
         self.Bind(wx.EVT_BUTTON, handler=self.edit_cards,
-                  id=self.view_b.GetId())
-        
-
+                  id=self.view_b.GetId())  
+        print wx.Frame.FindFocus()
         # Accelerator key binding
 #        self.root.bind("<Command-o>", self.on_open)
 #        self.root.bind("<Command-s>", self.on_save)
@@ -214,7 +226,17 @@ class MainWindow(wx.Frame):
             percent = "%.1f" % (100 * card.percentage()) + "%"
             self.data_view.insert(END, (card[0], card[1], card.correct,
                                          card.incorrect, percent))
-
+            
+    
+    def on_key_pressed(self, event):
+        print 'here'
+        keycode = event.GetKeyCode()
+        print keycode
+        if keycode == wx.WXK_RIGHT:
+            self.show_next_card()
+        elif keycode == wx.WXK_LEFT:
+            self.show_prev_card()
+            
     def show_next_card(self, event=None):
         """Method called to display the next flashcard in the set"""
         if len(self.flashcards) == 0:
@@ -223,7 +245,12 @@ class MainWindow(wx.Frame):
         front = self.flashcards[self.index] [0]
         back  = self.flashcards[self.index] [1]
         self.card_front.SetLabel(front)
-        self.card_back.SetLabel(back)
+        
+        if self.show_both_sides.IsChecked():
+            self.card_back.SetLabel(back)
+        else:
+            self.card_back.SetLabel("")
+            
         self.card_front.SetSize(self.card_front.GetBestSize())
         self.card_back.SetSize(self.card_back.GetBestSize())
         self.card_front.Wrap(self.GetSize() [0])
@@ -244,10 +271,19 @@ class MainWindow(wx.Frame):
         self.Layout()
 
     def show_prev_card(self, event=None):
+        """Display the previous flashcard in the set"""
+        if len(self.flashcards) == 0:
+            return
+        
         front = self.flashcards[self.index] [0]
         back  = self.flashcards[self.index] [1]
         self.card_front.SetLabel(front)
-        self.card_back.SetLabel(back)
+        
+        if self.show_both_sides.IsChecked():
+            self.card_back.SetLabel(back)
+        else:
+            self.card_back.SetLabel("")
+            
         self.index -= 1
         if self.index == 0:
             self.index = len(self.flashcards) - 1
@@ -258,29 +294,17 @@ class MainWindow(wx.Frame):
         self.update_card_count()
         self.Layout()
     
+    def show_back_of_card(self, event=None):
+        """If the "Show Both Sides" menu item in checked, then show the 
+        back of the current flashcard"""
+        if not self.show_both_sides.IsChecked():
+            back_of_card = self.flashcards[self.index] [1]
+            self.card_back.SetLabel(back_of_card)
+            self.Layout()
+    
     def find_card_win(self, event=None):
         win = FindCardWin(self, title="Find Cards", cards=self.flashcards)
                   
-#        self.find_win = Toplevel(self.root)
-#        top_frame = Frame(self.find_win)
-#        self.find_win.title("Find Card")
-        
-#        label = Label(top_frame, text="Search: ")
-#        self.user_search = Entry(top_frame)
-#        label.pack(side=LEFT, pady=5, padx=5)
-#        self.user_search.pack(side=LEFT, pady=5)
-#        self.user_search.focus_set()
-#        self.find_b = Button(top_frame, text="Find", width=5, command=self.find)
-#        self.find_b.pack(pady=5)
-#        top_frame.pack()
-        
-#        self.result_label = Label(self.find_win, text="Results: ", 
-#                                  font=('default', '14'))
-#        self.result_label.pack(pady=5)
-#        self.user_search.bind("<Return>", self.find)
-    
-
-    
     def update_card_count(self):
         """Update the text of the counter for the card number. i.e. 5 / 26, or 10 / 21"""
         self.card_number.SetLabel("%d / %d" % (self.card_index, len(self.flashcards)))
