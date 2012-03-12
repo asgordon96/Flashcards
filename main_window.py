@@ -164,6 +164,7 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_MENU, handler=self.on_import, id=load_cards.GetId())
         self.Bind(wx.EVT_MENU, handler=self.find_card_win, id=find.GetId())
         self.Bind(wx.EVT_MENU, handler=self.on_quit, id=quit.GetId())
+        self.Bind(wx.EVT_MENU, handler=self.on_show_both_sides, id=self.show_both_sides.GetId())
         self.Bind(wx.EVT_CLOSE, handler=self.on_quit)
         
         self.Bind(wx.EVT_KEY_DOWN, handler=self.on_key_pressed)
@@ -301,6 +302,16 @@ class MainWindow(wx.Frame):
             back_of_card = self.flashcards[self.index - 1] [1]
             self.card_back.SetLabel(back_of_card)
             self.Layout()
+    
+    def on_show_both_sides(self, event=None):
+        """Change the current card to show both sides or 1 side
+        according to the menu change"""
+        if self.show_both_sides.IsChecked():
+            back_of_card = self.flashcards[self.index - 1] [1]
+            self.card_back.SetLabel(back_of_card)
+            self.Layout()
+        else:
+            self.card_back.SetLabel("")
     
     def find_card_win(self, event=None):
         win = FindCardWin(self, title="Find Cards", cards=self.flashcards)
