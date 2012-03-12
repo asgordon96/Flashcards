@@ -298,7 +298,7 @@ class MainWindow(wx.Frame):
         """If the "Show Both Sides" menu item in checked, then show the 
         back of the current flashcard"""
         if not self.show_both_sides.IsChecked():
-            back_of_card = self.flashcards[self.index] [1]
+            back_of_card = self.flashcards[self.index - 1] [1]
             self.card_back.SetLabel(back_of_card)
             self.Layout()
     
