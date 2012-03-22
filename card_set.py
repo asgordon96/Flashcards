@@ -37,11 +37,12 @@ class FlashcardSet:
         cards_list = text.split("\n")
         final_set = FlashcardSet()
         for line in cards_list:
-            L = line.split(",")
-            card = Flashcard(L[0], L[1])
-            card.correct = int(L[2])
-            card.incorrect = int(L[3])
-            final_set.cards.append(card)
+            if line:
+                L = line.split(",")
+                card = Flashcard(L[0], L[1])
+                card.correct = int(L[2])
+                card.incorrect = int(L[3])
+                final_set.cards.append(card)
         return final_set
         
     def __init__(self, cards=None):

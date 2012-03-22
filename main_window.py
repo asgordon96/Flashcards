@@ -163,6 +163,7 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_MENU, handler=self.on_save, id=save.GetId())
         self.Bind(wx.EVT_MENU, handler=self.on_import, id=load_cards.GetId())
         self.Bind(wx.EVT_MENU, handler=self.find_card_win, id=find.GetId())
+        self.Bind(wx.EVT_MENU, handler=self.shuffle_cards, id=shuffle.GetId())
         self.Bind(wx.EVT_MENU, handler=self.on_quit, id=quit.GetId())
         self.Bind(wx.EVT_MENU, handler=self.on_show_both_sides, id=self.show_both_sides.GetId())
         self.Bind(wx.EVT_CLOSE, handler=self.on_quit)
@@ -190,7 +191,8 @@ class MainWindow(wx.Frame):
 
     def shuffle_cards(self, event=None):
         self.flashcards.shuffle()
-        self.index = 0
+        self.index = -1
+        self.show_next_card()
 
     def view_all_cards(self, event=None):
         """In a new window. Show both sides of every flashcard using labels"""
