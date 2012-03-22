@@ -243,6 +243,10 @@ class MainWindow(wx.Frame):
         if len(self.flashcards) == 0:
             return
         
+        self.index += 1
+        if self.index == len(self.flashcards):
+            self.index = 0
+        
         front = self.flashcards[self.index] [0]
         back  = self.flashcards[self.index] [1]
         self.card_front.SetLabel(front)
@@ -257,16 +261,14 @@ class MainWindow(wx.Frame):
         self.card_front.Wrap(self.GetSize() [0])
         self.card_back.Wrap(self.GetSize() [0])
         
-        self.index += 1
-        if self.index == len(self.flashcards):
-            self.index = 0
+        
+            
         if self.card_index == len(self.flashcards):
             self.card_index = 1
         else:
             self.card_index += 1
+            
         self.update_card_count()
-#        if self.GetSize() [1] < self.card_back.GetSize() [1]:
-#            print 'here'
         self.SetSize((-1, self.GetBestSize() [1]))
         self.SendSizeEvent()
         self.Layout()
@@ -275,6 +277,11 @@ class MainWindow(wx.Frame):
         """Display the previous flashcard in the set"""
         if len(self.flashcards) == 0:
             return
+        
+        if self.index == 0:
+            self.index = len(self.flashcards) - 1
+        else:
+            self.index -= 1
         
         front = self.flashcards[self.index] [0]
         back  = self.flashcards[self.index] [1]
@@ -285,9 +292,6 @@ class MainWindow(wx.Frame):
         else:
             self.card_back.SetLabel("")
             
-        self.index -= 1
-        if self.index == 0:
-            self.index = len(self.flashcards) - 1
         if self.card_index == 1:
             self.card_index = len(self.flashcards)
         else:
@@ -298,8 +302,8 @@ class MainWindow(wx.Frame):
     def show_back_of_card(self, event=None):
         """If the "Show Both Sides" menu item in checked, then show the 
         back of the current flashcard"""
-        if not self.show_both_sides.IsChecked():
-            back_of_card = self.flashcards[self.index - 1] [1]
+        if not self.show_both_sides.IsChecked():            
+            back_of_card = self.flashcards[self.index] [1]
             self.card_back.SetLabel(back_of_card)
             self.Layout()
     
@@ -365,6 +369,7 @@ class MainWindow(wx.Frame):
             except IOError:
                 print "Unable to read file"
             self.saved = pathname
+            self.index = -1
             self.show_next_card()
             self.card_index = 1
             self.update_card_count()
