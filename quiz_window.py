@@ -181,6 +181,7 @@ class QuizWindow:
         self.remaining -=1
         self.update_scores()
         self.answer_box.Disable()
+        self.answer_button.Disable()
         self.next = wx.Button(self.window, label="Next")
         self.right_pane.Add(self.next, flag=wx.ALIGN_CENTER|wx.ALL, border=5)
         self.next.SetDefault()
@@ -188,7 +189,8 @@ class QuizWindow:
         self.window.Layout()
 
     def next_q(self, event=None):
-        """Called to go to the next question. The card index is incremened"""   
+        """Called to go to the next question. The card index is incremened"""
+        self.answer_button.Enable()   
         self.question_index += 1
         if self.question_index == len(self.cards):
             c = self.correct

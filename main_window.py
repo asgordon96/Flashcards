@@ -13,7 +13,6 @@
 # Will be put under version control with git
 
 import wx
-import pickle
 import os
 from card_set import FlashcardSet
 from new_cards_window import NewCardsWin
@@ -104,9 +103,9 @@ class MainWindow(wx.Frame):
         # Building the top of the window. 
         # This includes the front and back of the flashcard
         # This also includes the 'next' and 'previous' buttons
-        self.card_front = wx.StaticText(self, label="No Flashcards")
-        self.card_back  = wx.StaticText(self, label="to display")
-        self.card_number = wx.StaticText(self, label="")
+        self.card_front = wx.StaticText(self, label="No Flashcards",style=wx.ALIGN_CENTER)
+        self.card_back  = wx.StaticText(self, label="to display",style=wx.ALIGN_CENTER)
+        self.card_number = wx.StaticText(self, label="",style=wx.ALIGN_CENTER)
         
         self.card_front.SetFont(the_font)
         self.card_back.SetFont(the_font)
@@ -181,7 +180,6 @@ class MainWindow(wx.Frame):
                   id=self.quiz_b.GetId())
         self.Bind(wx.EVT_BUTTON, handler=self.edit_cards,
                   id=self.view_b.GetId())  
-        print wx.Frame.FindFocus()
         # Accelerator key binding
 #        self.root.bind("<Command-o>", self.on_open)
 #        self.root.bind("<Command-s>", self.on_save)
@@ -193,42 +191,68 @@ class MainWindow(wx.Frame):
         self.flashcards.shuffle()
         self.index = -1
         self.show_next_card()
-
-    def view_all_cards(self, event=None):
-        """In a new window. Show both sides of every flashcard using labels"""
-        win = Toplevel(self.root)
-        self.data_view = MultiListbox(win, (("Front", 30), ("Back", 30), 
-                                       ("Correct", 10), ("Incorrect", 10),
-                                       ("Percent", 10)))
-        self.data_view.pack()
-        sort_b = Button(win, text="Sort by Percentage", 
-                        command=self.sort_flashcards)
-        sort_b.pack(side=BOTTOM, pady=10)
-        for pair in self.flashcards:
-            percent = "%.1f" % (100 * pair.percentage()) + "%"
-            self.data_view.insert(END, (pair[0], pair[1], pair.correct,
-                                    pair.incorrect, percent))
+    
+    def wrap_and_resize(self):
+        """Wrap text in the text box and resize the window when text changes"""
+        # wraps text to current horizontal width
+        self.card_front.Wrap(self.GetSize() [0] - 10)
+        self.card_back.Wrap(self.GetSize() [0] - 10)
+        ideal_size = self.GetBestSize()
+        current_size = self.GetSize()
         
-        self.data_view.labels[-1].bind("<ButtonRelease-1>", self.sort_flashcards)
-        self.data_view.labels[-1].bind("<Button-1>", self.sort_button_pushed)
-        #self.flashcards.sort_by_percentage()
-        #print self.flashcards 
+        # if the minimum size is not big enough, set to minimum size
+        # but if the window is already big enough, keep it the same size
+        if current_size.x < ideal_size.x:
+            x_size = ideal_size.x
+        else:
+            x_size = current_size.x
+                
+        if current_size.y < ideal_size.y:
+            y_size = ideal_size.y
+        else:
+            y_size = current_size.y
+        
+        self.SetMinSize(ideal_size)
+        
+        self.SetSize(wx.Size(x_size, y_size))
+        self.SendSizeEvent()
+        self.Layout()
+        
+#    def view_all_cards(self, event=None):
+#        """In a new window. Show both sides of every flashcard using labels"""
+#        win = Toplevel(self.root)
+#        self.data_view = MultiListbox(win, (("Front", 30), ("Back", 30), 
+#                                       ("Correct", 10), ("Incorrect", 10),
+#                                       ("Percent", 10)))
+#        self.data_view.pack()
+#        sort_b = Button(win, text="Sort by Percentage", 
+#                        command=self.sort_flashcards)
+#        sort_b.pack(side=BOTTOM, pady=10)
+#        for pair in self.flashcards:
+#            percent = "%.1f" % (100 * pair.percentage()) + "%"
+#            self.data_view.insert(END, (pair[0], pair[1], pair.correct,
+#                                    pair.incorrect, percent))
+        
+#        self.data_view.labels[-1].bind("<ButtonRelease-1>", self.sort_flashcards)
+#        self.data_view.labels[-1].bind("<Button-1>", self.sort_button_pushed)
+#        #self.flashcards.sort_by_percentage()
+#        #print self.flashcards 
     
-    def sort_button_pushed(self, event=None):
-        """Called when the sort column 'Percentage' is pressed"""
-        self.data_view.labels[-1] ['relief'] = SUNKEN
+#    def sort_button_pushed(self, event=None):
+#        """Called when the sort column 'Percentage' is pressed"""
+#        self.data_view.labels[-1] ['relief'] = SUNKEN
     
-    def sort_flashcards(self, event=None):
-        """Sort the flashcards by percentage in the view_all_cards screen"""
-        self.data_view.labels[-1] ['relief'] = RAISED
-        cards_copy = FlashcardSet()
-        cards_copy.cards = self.flashcards.cards[:]
-        cards_copy.sort_by_percentage()
-        self.data_view.delete(0, END)
-        for card in cards_copy:
-            percent = "%.1f" % (100 * card.percentage()) + "%"
-            self.data_view.insert(END, (card[0], card[1], card.correct,
-                                         card.incorrect, percent))
+#    def sort_flashcards(self, event=None):
+#        """Sort the flashcards by percentage in the view_all_cards screen"""
+#        self.data_view.labels[-1] ['relief'] = RAISED
+#        cards_copy = FlashcardSet()
+#        cards_copy.cards = self.flashcards.cards[:]
+#        cards_copy.sort_by_percentage()
+#        self.data_view.delete(0, END)
+#        for card in cards_copy:
+#            percent = "%.1f" % (100 * card.percentage()) + "%"
+#            self.data_view.insert(END, (card[0], card[1], card.correct,
+#                                         card.incorrect, percent))
             
     
     def on_key_pressed(self, event):
@@ -260,10 +284,8 @@ class MainWindow(wx.Frame):
             
         self.card_front.SetSize(self.card_front.GetBestSize())
         self.card_back.SetSize(self.card_back.GetBestSize())
-        self.card_front.Wrap(self.GetSize() [0])
-        self.card_back.Wrap(self.GetSize() [0])
-        
-        
+        self.card_front.Wrap(self.GetSize() [0] - 10)
+        self.card_back.Wrap(self.GetSize() [0] - 10)
             
         if self.card_index == len(self.flashcards):
             self.card_index = 1
@@ -271,9 +293,11 @@ class MainWindow(wx.Frame):
             self.card_index += 1
             
         self.update_card_count()
-        self.SetSize((-1, self.GetBestSize() [1]))
-        self.SendSizeEvent()
-        self.Layout()
+        self.wrap_and_resize()
+#        self.SetSize((-1, self.GetBestSize() [1]))
+#        self.SetSize(self.GetBestSize())
+#        self.SendSizeEvent()
+#        self.Layout()
 
     def show_prev_card(self, event=None):
         """Display the previous flashcard in the set"""
@@ -299,16 +323,18 @@ class MainWindow(wx.Frame):
         else:
             self.card_index -= 1
         self.update_card_count()
-        self.Layout()
-    
+        self.wrap_and_resize()
+
+
     def show_back_of_card(self, event=None):
         """If the "Show Both Sides" menu item in checked, then show the 
         back of the current flashcard"""
         if not self.show_both_sides.IsChecked():            
             back_of_card = self.flashcards[self.index] [1]
             self.card_back.SetLabel(back_of_card)
-            self.Layout()
-    
+            self.wrap_and_resize()
+
+
     def on_show_both_sides(self, event=None):
         """Change the current card to show both sides or 1 side
         according to the menu change"""

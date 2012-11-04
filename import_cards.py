@@ -23,6 +23,8 @@ def get_cards_export(url):
     end_index = content.find("</textarea>")
     cards = content[start_index:end_index]
     split_cards = [line.split('\t') for line in cards.split('\n')]
+    for line in split_cards:
+        print line
     
     flashcards = FlashcardSet()
     for front, back in split_cards:
